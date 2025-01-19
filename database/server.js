@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 
 const app = express();
+
 app.use(express.json());
 app.use(cors({
   origin: '*',
@@ -40,24 +41,25 @@ app.post('/validate-user', (req, res) => {
 app.post('/register-owner', (req, res) => {
   const { first_name, last_name, age, id_number, email, phone_number, password } = req.body;
 
+  // Validar datos
   if (!first_name || !last_name || !age || !id_number || !email || !phone_number || !password) {
     return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
   }
 
+  // Insertar propietario en la base de datos
   const query = `
     INSERT INTO owners (first_name, last_name, age, id_number, email, phone_number, password)
-    VALUES (?, ?, ?, ?, ?, ?, ?);
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(query, [first_name, last_name, age, id_number, email, phone_number, password], function (err) {
     if (err) {
-      if (err.message.includes('UNIQUE')) {
-        return res.status(400).json({ error: 'El correo, número de teléfono o número de identificación ya existe.' });
-      }
-      return res.status(500).json({ error: 'Error al insertar los datos en la base de datos.' });
+      console.error('Error al insertar en la base de datos:', err);
+      return res.status(500).json({ error: 'Error al registrar el propietario.' });
     }
 
-    res.status(201).json({ message: 'Usuario registrado exitosamente.', userId: this.lastID });
+    // Devolver el ID del propietario recién creado
+    res.status(201).json({ message: 'Propietario registrado exitosamente.', id: this.lastID });
   });
 });
 
@@ -160,18 +162,23 @@ app.put('/properties/:id', (req, res) => {
 // Eliminar una propiedad
 app.delete('/properties/:id', (req, res) => {
   const propertyId = req.params.id;
-
   const query = `DELETE FROM properties WHERE id = ?`;
+  console.log("Hola mundo");
 
   db.run(query, [propertyId], function (err) {
     if (err) {
+      console.error("Error al eliminar la propiedad:", err);
       return res.status(500).json({ error: 'Error al eliminar la propiedad.' });
+    }
+
+    if (this.changes === 0) {
+      // Si no se eliminó ninguna fila (puede ser que no haya una propiedad con ese ID)
+      return res.status(404).json({ error: 'Propiedad no encontrada.' });
     }
 
     res.status(200).json({ message: 'Propiedad eliminada exitosamente.' });
   });
 });
-
 
 
 // Inicia el servidor
