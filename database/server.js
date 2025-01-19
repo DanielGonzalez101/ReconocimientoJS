@@ -20,7 +20,8 @@ const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE, (err) =
   }
 });
 
-// Ruta para validar existencia de usuario por email, id_number o phone_number
+// Ruta para validar existencia de usuario por email, id_number o phone_number ola
+
 app.post('/validate-user', (req, res) => {
   const { email, id_number, phone_number } = req.body;
 
